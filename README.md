@@ -8,8 +8,6 @@
                 WRITTEN BY ROBIN BOERS                   
 </pre>
 
-<hr>
-
 This tool can be used to configure any debian based
 installation from the commandline. It can setup wifi, change hostname,  
 change root password and install a very basic and lightweight desktop.
