@@ -85,6 +85,42 @@ function _set_wifi() {
 
 }
 
+function _configure_wifi() {
+
+    # declare list array to be built up
+    wifiNetworkList=()  
+
+    # get list of available SSIDs
+    ssidList=$(iwlist wlan0 scan | grep ESSID | sed 's/.*:"//;s/"//') 
+
+    while read -r line; do
+
+        # append each SSID to the wifiNetworkList array
+        wifiNetworkList+=("$line" "$line") 
+
+    done <<< "$ssidList" # feed in the ssidList to the while loop
+
+    # append an "other" option to the wifiNetworkList array
+    #wifiNetworkList+=(other other) 
+
+    wifiSSID=$(whiptail --notags --menu "Available networks" 20 80 10 "${wifiNetworkList[@]}" 3>&1 1>&2 2>&3)
+    wifiPass=$(whiptail --notags --title "Enter password" --inputbox "" 9 70 3>&1 1>&2 2>&3)
+
+    whiptail --title "Credentials" --msgbox "
+SSID: $wifiSSID
+Passphrase: $wifiPass
+" 10 90
+
+    iwconfig wlan0 essid $wifiSSID key s:$wifiPass
+
+    wpa_supplicant -B -i wlan0 -DWext -c /etc/wpa_supplicant.conf
+    wpa_passphrase "$wifiSSID" "$wifiPass" | sudo tee /etc/wpa_supplicant.conf
+    wpa_supplicant -c /etc/wpa_supplicant.conf -i wlan0
+
+    dhclient wlan0
+
+}
+
 function _install_desktop() {
     sudo apt -y install xorg openbox opconf obsession obmenu lxappearance lxrandr tint2 xterm
 }
@@ -141,7 +177,7 @@ whiptail --title "TermiTools" --menu "Choose setting to configure:" 20 70 9 --no
 
 case $MENU in
 	"1)")   
-		_not_done_screen
+		_configure_wifi
 	;;
 	"2)")   
 	    _configure_locale
